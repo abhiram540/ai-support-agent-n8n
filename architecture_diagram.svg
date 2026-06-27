@@ -1,6 +1,6 @@
 <svg width="100%" viewBox="0 0 680 726" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>CodeBasics AI support agent workflow</title>
-<desc>A pipeline from manual trigger through an LLM classifier, account lookup and FAQ retrieval, a switch that routes to course-access, refund, general or escalation branches, then drafts a learner reply or raises a human ticket and logs the result.</desc>
+<desc>A pipeline from a web intake form through an LLM classifier, account lookup and FAQ retrieval, a switch that routes to course-access, refund, general or escalation branches, then drafts a learner reply or raises a human ticket and logs the query and outcome to a Google Sheet.</desc>
 <defs>
 <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
 <style>
@@ -55,7 +55,7 @@
 <g class="c-purple"><rect x="70" y="520" width="180" height="46" rx="4"/><text class="t" x="160" y="540" text-anchor="middle">Draft learner reply</text><text class="ts" x="160" y="556" text-anchor="middle">LLM</text></g>
 <g class="c-red"><rect x="450" y="520" width="185" height="46" rx="4"/><text class="t" x="542" y="540" text-anchor="middle">Notify human (Tier-2)</text><text class="ts" x="542" y="556" text-anchor="middle">24h SLA</text></g>
 <g class="c-green"><rect x="70" y="586" width="180" height="46" rx="4"/><text class="t" x="160" y="606" text-anchor="middle">Format output</text><text class="ts" x="160" y="622" text-anchor="middle">Learner-facing reply</text></g>
-<g class="c-green"><rect x="270" y="652" width="180" height="46" rx="4"/><text class="t" x="360" y="672" text-anchor="middle">Log to Google Sheet</text><text class="ts" x="360" y="688" text-anchor="middle">Append row</text></g>
+<g class="c-green"><rect x="270" y="652" width="180" height="46" rx="4"/><text class="t" x="360" y="672" text-anchor="middle">Log to Google Sheet</text><text class="ts" x="360" y="688" text-anchor="middle">Query + outcome</text></g>
 
 <rect x="455" y="44" width="205" height="150" rx="6" fill="none" stroke="#DADCE0" stroke-width="0.5"/>
 <text class="th" x="470" y="66">Colour = stage</text>
