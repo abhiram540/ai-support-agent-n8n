@@ -1,4 +1,4 @@
-# CodeBasics – AI Learner Support Agent (n8n)
+# AI Learner Support Agent (n8n)
 
 A multi-step n8n agent that triages learner-support queries, answers the easy ones
 automatically, and escalates genuine edge cases to a human.
