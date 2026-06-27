@@ -85,3 +85,6 @@ After running all 3, your `Log` sheet will have **3 rows** — two `auto_resolve
 access, refund) and one `escalated` (the billing case), because both the auto and escalation
 paths feed the same `Log to Google Sheet` node. A screenshot of that filled sheet is strong
 "tool chaining + output" evidence for the rubric.
+
+**📊 Recorded responses (live sheet):**
+<https://docs.google.com/spreadsheets/d/1I6UXhehLxdKaWtf6AEYmjV15wrOKewrIB0OPDfixtHM/edit?usp=sharing>

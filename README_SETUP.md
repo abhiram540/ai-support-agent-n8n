@@ -39,6 +39,10 @@ automatically, and escalates genuine edge cases to a human.
 > Google Sheets credential, paste your Sheet ID, and add a tab named `Log`. It uses
 > auto-map, so the columns are created from the output fields automatically.
 
+**📊 Live log of recorded responses:** the agent's actual responses from the test runs were
+recorded in this Google Sheet —
+<https://docs.google.com/spreadsheets/d/1I6UXhehLxdKaWtf6AEYmjV15wrOKewrIB0OPDfixtHM/edit?usp=sharing>
+
 ---
 
 ## Mock data (in `Lookup Learner Account`)
