@@ -1,0 +1,17 @@
+# --- Secrets: never commit API keys / credentials ---
+Google Gemini API Key.txt
+OpenAI API Key.txt
+*API Key*.txt
+*api*key*.txt
+*.key
+.env
+.env.*
+*.pem
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Claude Code internal ---
+.claude/

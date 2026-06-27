@@ -1,0 +1,255 @@
+{
+  "name": "CodeBasics – AI Learner Support Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "CodeBasics Learner Support",
+        "formDescription": "Pick a sample query, or choose Custom and type your own below.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Sample query",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  { "option": "Course access — Abhiram (login issue)" },
+                  { "option": "Refund within window — Ravi (Power BI)" },
+                  { "option": "Escalation — Arjun (payment deducted)" },
+                  { "option": "Custom (type your own below)" }
+                ]
+              },
+              "requiredField": true
+            },
+            { "fieldLabel": "Custom query", "fieldType": "textarea", "requiredField": false },
+            { "fieldLabel": "Custom learner email", "fieldType": "text", "requiredField": false }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n1",
+      "name": "Learner Query Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [-120, 300],
+      "webhookId": "codebasics-support-form"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const sel = ($json['Sample query'] || '').toString();\nconst presets = {\n  course: { learnerName: 'Abhiram', learnerEmail: 'abhiram540@gmail.com', orderId: 'CB-10500', queryText: 'Hi, I cannot log into my account and I am unable to access my Python course. It keeps saying invalid credentials. Can you help me get back in?' },\n  refund: { learnerName: 'Ravi Kumar', learnerEmail: 'ravi.kumar@example.com', orderId: 'CB-10241', queryText: 'I bought the Power BI course a couple of days ago but it is not what I expected. I would like a refund please.' },\n  escalation: { learnerName: 'Arjun Shah', learnerEmail: 'arjun.shah@example.com', orderId: 'CB-11233', queryText: 'My payment failed but the money was deducted from my bank account. I do not see the SQL course in my dashboard. This is a billing problem, please fix it.' }\n};\nlet rec;\nif (sel.indexOf('Course access') === 0) rec = presets.course;\nelse if (sel.indexOf('Refund') === 0) rec = presets.refund;\nelse if (sel.indexOf('Escalation') === 0) rec = presets.escalation;\nelse rec = { learnerName: 'Learner', learnerEmail: ($json['Custom learner email'] || 'guest@example.com').toString().trim(), orderId: 'N/A', queryText: ($json['Custom query'] || '').toString().trim() };\nreturn { json: Object.assign({}, rec, { channel: 'web_form' }) };"
+      },
+      "id": "n2",
+      "name": "Build Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a support-ticket classifier for CodeBasics, an ed-tech platform. Read the learner message and respond with ONLY a raw JSON object (no markdown, no code fences) using this exact schema:\n{\"category\": one of [\"course_access\",\"refund\",\"escalation_human\",\"other\"], \"intent\": \"<one short sentence>\", \"sentiment\": \"positive|neutral|negative\", \"confidence\": <number 0-1>, \"escalation_reason\": \"<string or null>\"}\n\nRouting rules:\n- \"course_access\": cannot log in, can't open course/videos, password or login problems, account locked.\n- \"refund\": any request for a refund or money back.\n- \"escalation_human\": billing disputes, 'payment failed but money was deducted', duplicate or double charges, genuine technical bugs, partnership/business enquiries, legal threats, or anything that clearly needs a human. Always fill escalation_reason for this category.\n- \"other\": certificate download, discounts/sales timing, course guidance, and general questions.\n\nLearner message: \"\"\"{{ $json.queryText }}\"\"\"",
+        "messages": { "messageValues": [] }
+      },
+      "id": "n3",
+      "name": "Classify Query (LLM)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "n4",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [320, 540]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const orig = $('Build Query').first().json;\nlet raw = ($json.text || $json.response || '').toString();\nconst s = raw.indexOf('{');\nconst e = raw.lastIndexOf('}');\nlet parsed;\ntry {\n  parsed = JSON.parse(raw.slice(s, e + 1));\n} catch (err) {\n  parsed = { category: 'other', intent: 'Could not parse classifier output', sentiment: 'neutral', confidence: 0, escalation_reason: null };\n}\nconst allowed = ['course_access', 'refund', 'escalation_human', 'other'];\nconst category = allowed.includes(parsed.category) ? parsed.category : 'other';\nreturn { json: Object.assign({}, orig, { category: category, intent: parsed.intent || '', sentiment: parsed.sentiment || 'neutral', confidence: parsed.confidence == null ? 0 : parsed.confidence, escalation_reason: parsed.escalation_reason || null }) };"
+      },
+      "id": "n5",
+      "name": "Parse Classification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nconst daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);\nconst accounts = {\n  'abhiram540@gmail.com': { learnerName: 'Abhiram', courseName: 'Python for Data Professionals', orderId: 'CB-10500', amountPaid: 3900, purchaseDate: daysAgo(5), paymentStatus: 'success', accountStatus: 'active' },\n  'ravi.kumar@example.com': { learnerName: 'Ravi Kumar', courseName: 'Power BI Data Analytics', orderId: 'CB-10241', amountPaid: 4500, purchaseDate: daysAgo(3), paymentStatus: 'success', accountStatus: 'active' },\n  'meena.nair@example.com': { learnerName: 'Meena Nair', courseName: 'Python for Data Professionals', orderId: 'CB-10876', amountPaid: 3900, purchaseDate: daysAgo(40), paymentStatus: 'success', accountStatus: 'active' },\n  'arjun.shah@example.com': { learnerName: 'Arjun Shah', courseName: 'SQL Beginner to Advanced', orderId: 'CB-11233', amountPaid: 2900, purchaseDate: daysAgo(2), paymentStatus: 'failed_money_deducted', accountStatus: 'payment_pending' }\n};\nconst email = (j.learnerEmail || '').toString().toLowerCase().trim();\nconst acct = accounts[email] || { learnerName: j.learnerName || 'Learner', courseName: 'Unknown', orderId: j.orderId || 'N/A', amountPaid: 0, purchaseDate: 'N/A', paymentStatus: 'unknown', accountStatus: 'no_account_found' };\nlet daysSince = null;\nlet within = false;\nif (acct.purchaseDate && acct.purchaseDate !== 'N/A') {\n  daysSince = Math.floor((Date.now() - new Date(acct.purchaseDate).getTime()) / 86400000);\n  within = daysSince <= 7;\n}\nreturn { json: Object.assign({}, j, acct, { learnerName: acct.learnerName, daysSincePurchase: daysSince, withinRefundWindow: within, refundWindowDays: 7 }) };"
+      },
+      "id": "n6",
+      "name": "Lookup Learner Account",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  { "id": "s1", "leftValue": "={{ $json.category }}", "rightValue": "course_access", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "course_access"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  { "id": "s2", "leftValue": "={{ $json.category }}", "rightValue": "refund", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "refund"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+                "conditions": [
+                  { "id": "s3", "leftValue": "={{ $json.category }}", "rightValue": "escalation_human", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "escalation_human"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "n7",
+      "name": "Route by Intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nj.kbArticle = 'Login / course-access steps: 1) Use the same email you purchased with. 2) Reset your password at codebasics.io/forgot-password. 3) Clear browser cache or try an incognito window. 4) Courses appear under Dashboard > My Learning within a few minutes of payment. If the account shows active and the issue persists after a password reset, our team can manually re-sync access.';\nj.kbSource = 'FAQ: Login & Course Access';\nreturn { json: j };"
+      },
+      "id": "n8",
+      "name": "Course Access KB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 80]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nconst within = j.withinRefundWindow === true;\nj.refundEligible = within;\nj.refundDecision = within ? 'APPROVE_AUTO' : 'DECLINE_OUTSIDE_WINDOW';\nj.policyNote = within\n  ? 'Purchase is within the 7-day refund window (' + j.daysSincePurchase + ' days ago), so a full refund can be auto-approved and will reach the original payment method in 5-7 business days.'\n  : 'Purchase is outside the 7-day refund window (' + j.daysSincePurchase + ' days ago), so a cash refund is not available per policy. We can offer a course swap or learning credit as a goodwill option.';\nj.kbSource = 'FAQ: Refund Policy (7-day window)';\nreturn { json: j };"
+      },
+      "id": "n9",
+      "name": "Refund Window Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nj.kbArticle = 'General help: Certificates download from Dashboard > My Courses > Download Certificate once 100% completion is reached. For discounts and upcoming sales, the next major sale is announced via email and on codebasics.io, so subscribing to the newsletter ensures you get the code. For course-guidance questions, learners are pointed to the learning-path page based on their goal (data analyst, data scientist, etc.).';\nj.kbSource = 'FAQ: General / Certificates / Discounts';\nreturn { json: j };"
+      },
+      "id": "n10",
+      "name": "General Help KB",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 440]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the CodeBasics learner-support assistant. Write a warm, concise, professional reply (max 150 words) to the learner. Use ONLY the information provided below. Do not invent policies, dates, or facts.\n\nLearner name: {{ $json.learnerName }}\nTheir message: {{ $json.queryText }}\nDetected intent: {{ $json.intent }}\nCategory: {{ $json.category }}\nAccount status: {{ $json.accountStatus }}\nCourse: {{ $json.courseName }}\nKnowledge-base answer (if any): {{ $json.kbArticle || 'N/A' }}\nRefund decision (if any): {{ $json.refundDecision || 'N/A' }}\nRefund policy note (if any): {{ $json.policyNote || 'N/A' }}\n\nWrite the reply now. Start with a greeting to {{ $json.learnerName }}, address their issue directly using the knowledge-base answer, and sign off as 'Team CodeBasics'.",
+        "messages": { "messageValues": [] }
+      },
+      "id": "n11",
+      "name": "Draft Learner Reply (LLM)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [1500, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const acct = $('Lookup Learner Account').first().json;\nconst reply = ($json.text || $json.response || '').toString().trim();\nreturn { json: {\n  learnerName: acct.learnerName,\n  learnerEmail: acct.learnerEmail,\n  queryText: acct.queryText,\n  category: acct.category,\n  intent: acct.intent,\n  courseName: acct.courseName,\n  orderId: acct.orderId,\n  agentReply: reply,\n  status: 'auto_resolved',\n  handledBy: 'AI Agent',\n  ticketId: '',\n  priority: 'normal',\n  slaHours: 0,\n  internalNote: 'Auto-resolved by AI agent (' + acct.category + ').',\n  timestamp: new Date().toISOString()\n} };"
+      },
+      "id": "n12",
+      "name": "Format Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1720, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nconst ticketId = 'TCK-' + Date.now().toString().slice(-6);\nconst reason = j.escalation_reason || j.intent || 'Needs human review';\nconst team = 'Tier-2 Human Support';\nreturn { json: {\n  learnerName: j.learnerName,\n  learnerEmail: j.learnerEmail,\n  queryText: j.queryText,\n  category: j.category,\n  intent: j.intent,\n  courseName: j.courseName,\n  orderId: j.orderId,\n  agentReply: 'Thanks ' + (j.learnerName || 'there') + ', this needs a specialist. I have created ticket ' + ticketId + ' and our human support team will get back to you within 24 hours.',\n  status: 'escalated',\n  handledBy: 'Human (' + team + ')',\n  ticketId: ticketId,\n  priority: 'high',\n  slaHours: 24,\n  internalNote: 'ESCALATION: ' + reason + ' | Learner: ' + j.learnerName + ' <' + j.learnerEmail + '> | Order: ' + j.orderId + ' | Payment: ' + j.paymentStatus,\n  timestamp: new Date().toISOString()\n} };"
+      },
+      "id": "n13",
+      "name": "Create Escalation Ticket",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 620]
+    },
+    {
+      "parameters": {},
+      "id": "n14",
+      "name": "Notify Human (Tier-2)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1500, 620]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Log", "mode": "name" },
+        "columns": { "mappingMode": "autoMapInputData", "value": {}, "matchingColumns": [] },
+        "options": {}
+      },
+      "id": "n15",
+      "name": "Log to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1960, 440],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Learner Query Form": { "main": [[{ "node": "Build Query", "type": "main", "index": 0 }]] },
+    "Build Query": { "main": [[{ "node": "Classify Query (LLM)", "type": "main", "index": 0 }]] },
+    "Google Gemini Chat Model": { "ai_languageModel": [[{ "node": "Classify Query (LLM)", "type": "ai_languageModel", "index": 0 }, { "node": "Draft Learner Reply (LLM)", "type": "ai_languageModel", "index": 0 }]] },
+    "Classify Query (LLM)": { "main": [[{ "node": "Parse Classification", "type": "main", "index": 0 }]] },
+    "Parse Classification": { "main": [[{ "node": "Lookup Learner Account", "type": "main", "index": 0 }]] },
+    "Lookup Learner Account": { "main": [[{ "node": "Route by Intent", "type": "main", "index": 0 }]] },
+    "Route by Intent": {
+      "main": [
+        [{ "node": "Course Access KB", "type": "main", "index": 0 }],
+        [{ "node": "Refund Window Check", "type": "main", "index": 0 }],
+        [{ "node": "Create Escalation Ticket", "type": "main", "index": 0 }],
+        [{ "node": "General Help KB", "type": "main", "index": 0 }]
+      ]
+    },
+    "Course Access KB": { "main": [[{ "node": "Draft Learner Reply (LLM)", "type": "main", "index": 0 }]] },
+    "Refund Window Check": { "main": [[{ "node": "Draft Learner Reply (LLM)", "type": "main", "index": 0 }]] },
+    "General Help KB": { "main": [[{ "node": "Draft Learner Reply (LLM)", "type": "main", "index": 0 }]] },
+    "Draft Learner Reply (LLM)": { "main": [[{ "node": "Format Output", "type": "main", "index": 0 }]] },
+    "Format Output": { "main": [[{ "node": "Log to Google Sheet", "type": "main", "index": 0 }]] },
+    "Create Escalation Ticket": { "main": [[{ "node": "Notify Human (Tier-2)", "type": "main", "index": 0 }]] },
+    "Notify Human (Tier-2)": { "main": [[{ "node": "Log to Google Sheet", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

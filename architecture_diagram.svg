@@ -1,0 +1,67 @@
+<svg width="100%" viewBox="0 0 680 726" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>CodeBasics AI support agent workflow</title>
+<desc>A pipeline from manual trigger through an LLM classifier, account lookup and FAQ retrieval, a switch that routes to course-access, refund, general or escalation branches, then drafts a learner reply or raises a human ticket and logs the result.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<style>
+.t{font-family:sans-serif;font-size:14px;fill:#1a1a1a}
+.ts{font-family:sans-serif;font-size:12px;fill:#5f6368}
+.th{font-family:sans-serif;font-size:14px;font-weight:600;fill:#1a1a1a}
+.c-blue rect{fill:#E8F0FE;stroke:#4285F4;stroke-width:0.5}
+.c-purple rect{fill:#EEEDFE;stroke:#7F77DD;stroke-width:0.5}
+.c-gray rect{fill:#F1F3F4;stroke:#9AA0A6;stroke-width:0.5}
+.c-teal rect{fill:#E0F7F5;stroke:#1AA99C;stroke-width:0.5}
+.c-amber rect{fill:#FEF3D9;stroke:#E8A93C;stroke-width:0.5}
+.c-red rect{fill:#FCE8E6;stroke:#EA4335;stroke-width:0.5}
+.c-green rect{fill:#E6F4EA;stroke:#34A853;stroke-width:0.5}
+</style>
+</defs>
+
+<g stroke="#9AA0A6" stroke-width="0.5" fill="none">
+<line x1="340" y1="90" x2="340" y2="176" marker-end="url(#arrow)"/>
+<line x1="340" y1="156" x2="340" y2="242" marker-end="url(#arrow)"/>
+<line x1="340" y1="222" x2="340" y2="308" marker-end="url(#arrow)"/>
+<line x1="340" y1="288" x2="340" y2="374" marker-end="url(#arrow)"/>
+<line x1="340" y1="354" x2="340" y2="440" marker-end="url(#arrow)"/>
+<path d="M340 420 L107 440" marker-end="url(#arrow)"/>
+<path d="M340 420 L262 440" marker-end="url(#arrow)"/>
+<path d="M340 420 L417 440" marker-end="url(#arrow)"/>
+<path d="M340 420 L572 440" marker-end="url(#arrow)"/>
+<path d="M107 486 L150 520" marker-end="url(#arrow)"/>
+<path d="M262 486 L175 520" marker-end="url(#arrow)"/>
+<path d="M417 486 L200 520" marker-end="url(#arrow)"/>
+<path d="M572 486 L555 520" marker-end="url(#arrow)"/>
+<line x1="160" y1="566" x2="160" y2="586" marker-end="url(#arrow)"/>
+<path d="M160 632 L330 652" marker-end="url(#arrow)"/>
+<path d="M542 566 L400 652" marker-end="url(#arrow)"/>
+</g>
+<path d="M145 222 L145 510 L165 520" fill="none" stroke="#9AA0A6" stroke-width="0.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<path d="M220 199 L263 188" fill="none" stroke="#9AA0A6" stroke-width="0.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+
+<g class="c-blue"><rect x="263" y="44" width="154" height="46" rx="4"/><text class="t" x="340" y="64" text-anchor="middle">Learner query form</text><text class="ts" x="340" y="80" text-anchor="middle">Form trigger</text></g>
+<g class="c-blue"><rect x="263" y="110" width="154" height="46" rx="4"/><text class="t" x="340" y="130" text-anchor="middle">Build query</text><text class="ts" x="340" y="146" text-anchor="middle">Preset or custom</text></g>
+<g class="c-purple"><rect x="263" y="176" width="154" height="46" rx="4"/><text class="t" x="340" y="196" text-anchor="middle">Classify query</text><text class="ts" x="340" y="212" text-anchor="middle">LLM · intent + category</text></g>
+<g class="c-gray"><rect x="263" y="242" width="154" height="46" rx="4"/><text class="t" x="340" y="262" text-anchor="middle">Parse classification</text><text class="ts" x="340" y="278" text-anchor="middle">JSON to fields</text></g>
+<g class="c-teal"><rect x="263" y="308" width="154" height="46" rx="4"/><text class="t" x="340" y="328" text-anchor="middle">Lookup account</text><text class="ts" x="340" y="344" text-anchor="middle">Mock order data</text></g>
+<g class="c-amber"><rect x="263" y="374" width="154" height="46" rx="4"/><text class="t" x="340" y="394" text-anchor="middle">Route by intent</text><text class="ts" x="340" y="410" text-anchor="middle">Switch</text></g>
+
+<g class="c-gray"><rect x="70" y="176" width="150" height="46" rx="4"/><text class="t" x="145" y="196" text-anchor="middle">Gemini chat model</text><text class="ts" x="145" y="212" text-anchor="middle">Shared LLM</text></g>
+
+<g class="c-teal"><rect x="40" y="440" width="135" height="46" rx="4"/><text class="t" x="107" y="460" text-anchor="middle">Course access KB</text><text class="ts" x="107" y="476" text-anchor="middle">FAQ retrieval</text></g>
+<g class="c-teal"><rect x="195" y="440" width="135" height="46" rx="4"/><text class="t" x="262" y="460" text-anchor="middle">Refund check</text><text class="ts" x="262" y="476" text-anchor="middle">7-day policy</text></g>
+<g class="c-teal"><rect x="350" y="440" width="135" height="46" rx="4"/><text class="t" x="417" y="460" text-anchor="middle">General help KB</text><text class="ts" x="417" y="476" text-anchor="middle">Certificates · sales</text></g>
+<g class="c-red"><rect x="505" y="440" width="135" height="46" rx="4"/><text class="t" x="572" y="460" text-anchor="middle">Escalation ticket</text><text class="ts" x="572" y="476" text-anchor="middle">Billing · bugs</text></g>
+
+<g class="c-purple"><rect x="70" y="520" width="180" height="46" rx="4"/><text class="t" x="160" y="540" text-anchor="middle">Draft learner reply</text><text class="ts" x="160" y="556" text-anchor="middle">LLM</text></g>
+<g class="c-red"><rect x="450" y="520" width="185" height="46" rx="4"/><text class="t" x="542" y="540" text-anchor="middle">Notify human (Tier-2)</text><text class="ts" x="542" y="556" text-anchor="middle">24h SLA</text></g>
+<g class="c-green"><rect x="70" y="586" width="180" height="46" rx="4"/><text class="t" x="160" y="606" text-anchor="middle">Format output</text><text class="ts" x="160" y="622" text-anchor="middle">Learner-facing reply</text></g>
+<g class="c-green"><rect x="270" y="652" width="180" height="46" rx="4"/><text class="t" x="360" y="672" text-anchor="middle">Log to Google Sheet</text><text class="ts" x="360" y="688" text-anchor="middle">Append row</text></g>
+
+<rect x="455" y="44" width="205" height="150" rx="6" fill="none" stroke="#DADCE0" stroke-width="0.5"/>
+<text class="th" x="470" y="66">Colour = stage</text>
+<g class="c-purple"><rect x="470" y="80" width="14" height="14" rx="3"/></g><text class="ts" x="492" y="91">LLM reasoning</text>
+<g class="c-teal"><rect x="470" y="102" width="14" height="14" rx="3"/></g><text class="ts" x="492" y="113">Tools / actions</text>
+<g class="c-amber"><rect x="470" y="124" width="14" height="14" rx="3"/></g><text class="ts" x="492" y="135">Routing</text>
+<g class="c-red"><rect x="470" y="146" width="14" height="14" rx="3"/></g><text class="ts" x="492" y="157">Human escalation</text>
+<g class="c-green"><rect x="470" y="168" width="14" height="14" rx="3"/></g><text class="ts" x="492" y="179">Output / log</text>
+</svg>
