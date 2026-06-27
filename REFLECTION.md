@@ -1,48 +1,35 @@
 # Reflection
 
-**What I built.** An n8n agent that triages CodeBasics learner-support queries end to end:
-a **Form Trigger** takes an incoming query, an LLM (Google **Gemini 2.5 Flash**) classifies the
-intent, the agent looks up a (mock) learner account, retrieves the right FAQ answer, applies
-refund-policy logic, and either drafts a learner-facing reply or raises a human ticket — logging
-every case to a Google Sheet. I deliberately scoped it to two query types done properly —
-**course-access** and **refunds** — plus a general auto-path and an explicit human-escalation
-branch, rather than covering every query type thinly.
+**What I built.** An AI assistant for CodeBasics learner support. When a learner sends a
+question, the assistant reads it, works out what it is about (for example a login problem or a
+refund request), finds the right answer from our help information, and writes a friendly reply.
+For genuinely tricky cases — such as billing disputes or "my payment failed but money was
+deducted" — it does not try to answer; it raises a ticket and hands the case to a human. Every
+query and its outcome is recorded in a Google Sheet so the team has a clear log. I focused on
+doing two common query types properly — **course access** and **refunds** — plus a clear path
+for sending edge cases to a person.
 
 **What broke and how I fixed it.**
-1. *The classifier's output wasn't reliably parseable.* The LLM occasionally wrapped its JSON
-   in markdown code fences, which broke `JSON.parse`. I fixed it by slicing the string from the
-   first `{` to the last `}` before parsing, and wrapping it in a try/catch that falls back to
-   the `other` category — so a malformed model response degrades gracefully instead of crashing
-   the run.
-2. *Context was lost after the LLM nodes.* The LangChain chain nodes only emit a `text` field,
-   so the learner's original details disappeared downstream. I fixed this by re-reading the
-   original data from earlier nodes by name (`$('Build Query')`, `$('Lookup Learner Account')`)
-   inside the Code nodes, so every step has the full context it needs.
-3. *Business decisions were drifting into the model.* My first version asked the LLM whether a
-   refund was eligible. That's the wrong place for it — it's non-deterministic and hard to
-   audit. I moved refund eligibility into a deterministic `Refund Window Check` Code node
-   (compare purchase date to a 7-day window) and let the LLM only *write* the reply. The model
-   reasons and communicates; code owns the rules.
-4. *The LLM node wouldn't run — `429`, quota `limit: 0`.* On Gemini's free tier, `gemini-2.0-flash`
-   returned a quota error where the free allowance was literally zero for that model on my key.
-   The misleading part was the "too many requests / retry in 29s" wording — waiting never helped.
-   I fixed it by switching the model to **`gemini-2.5-flash`**, which had free-tier quota, and the
-   workflow ran immediately. Lesson: `limit: 0` is an entitlement problem, not a rate-limit you
-   wait out — change the model (or project), don't retry.
-5. *The static input made testing clumsy.* My first version used a Set node with one hardcoded
-   query, so every run sent the same message and I had to hand-edit fields between tests. I
-   replaced it with a **Form Trigger** plus a `Build Query` resolver: each run opens a form where
-   I pick one of three preset test cases (or type a custom query). This made the three test runs
-   repeatable and one-click, and turned the trigger into something closer to a real support intake.
 
-**What I'd improve next.**
-- Add a **reply-sending node** (Gmail / email) on the auto path so it actually closes the loop
-  with the learner, not just drafts the reply.
-- Swap the hardcoded FAQ Code nodes for a **vector store / RAG retrieval** over the real help
-  docs, so answers stay current without editing the workflow.
-- Add a **confidence threshold**: if the classifier's confidence is low, route to a human even
-  when the category looks auto-answerable — better to over-escalate than send a wrong answer.
-- Add **evaluation**: log every classification and have a human spot-check a sample weekly to
-  measure mis-routing, and track auto-resolution rate and escalation rate as the core PM metrics.
-- Handle **multi-intent** messages (e.g., "I can't log in *and* I want a refund"), which the
-  current single-label classifier would only partly address.
+1. *The AI model would not run because of usage limits.* My first choice (an OpenAI model) and
+   even a couple of the Google Gemini models returned an error saying the free usage quota was
+   already used up, so the assistant could not reply. I worked through the options and found a
+   free model — **Google Gemini 2.5 Flash** — that had available capacity, switched the assistant
+   to use it, and everything ran smoothly. This also kept the whole project free to run.
+
+2. *Testing was slow because I had to type the details every time.* To check different
+   situations, I originally had to enter the learner's name, email and question by hand for each
+   test, which was fiddly and error-prone. To make this easier, I added a simple **intake form**
+   with a drop-down of ready-made sample questions (course access, refund, escalation). Now I can
+   just pick a scenario from the list and run it in one click, which made testing much faster and
+   more reliable.
+
+**What I would improve next.**
+- Connect a real email inbox so the assistant can actually receive questions and send its
+  replies, instead of being run manually for testing.
+- Keep the help answers automatically up to date so responses stay accurate as our courses and
+  policies change.
+- Track simple success measures — how many queries the assistant resolves on its own versus how
+  many it passes to a human — so we can show the impact and spot where it needs improvement.
+- When the assistant is unsure about a query, send it to a human rather than guessing, so
+  learners always get a reliable answer.
